@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import {Project, Analysis, Component, Dependency, ForgeClass} from './types';
+import {Project, Analysis, ForgeClassDeclaration} from './types';
+import {ComponentMetadata, DependencyMetadata} from '../adamantium/types';
 
 export default function analyze(project: Project): Analysis {
   
@@ -21,7 +22,7 @@ export default function analyze(project: Project): Analysis {
     if (node.kind == ts.SyntaxKind.ClassDeclaration) {
       const symbol = checker.getSymbolAtLocation((<ts.ClassDeclaration>node).name);
       const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
-      if (isForge(type)) {
+      if (isForge(type) && (node.flags & ts.NodeFlags.Abstract) == 0) {
         addForge(node, type, sourceFile);
       }
       else {
@@ -34,12 +35,10 @@ export default function analyze(project: Project): Analysis {
   }
   
   function addForge(node: ts.Node, type: ts.Type, sourceFile: ts.SourceFile): void {
-    if ((node.flags & ts.NodeFlags.Abstract) == 0) {
-      analysis.forges.push({
-        type: type,
-        fileName: sourceFile.fileName
-      });
-    }
+    analysis.forges.push({
+      type: type,
+      fileName: sourceFile.fileName
+    });
   }
   
   function addComponent(type: ts.Type): void {
@@ -53,7 +52,7 @@ export default function analyze(project: Project): Analysis {
     };
   }
   
-  function analyzeDependency(symbol: ts.Symbol) : Dependency {
+  function analyzeDependency(symbol: ts.Symbol) : DependencyMetadata {
     let type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
     return {
       type: checker.typeToString(type)

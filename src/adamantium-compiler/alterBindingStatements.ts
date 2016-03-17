@@ -1,17 +1,21 @@
 import * as ts from 'typescript'
-import {Project, Binding, Analysis} from './types';
+import {Project, Analysis} from './types';
+
+interface BindingStatement {
+  node: ts.Node,
+  service: string,
+  component: string,
+}
 
 export default function alterBindingStatements(project: Project, analysis: Analysis): void {
   
-  const host = project.getLanguageServiceHost();
-  const languageService = project.getLanguageService();
   const checker = project.getTypeChecker();
   
   for (const forge of analysis.forges) {
     const {type, fileName} = forge;
-    const sourceFile = languageService.getSourceFile(fileName);
     
-    let bindings = findBindingStatementsWithin(type.symbol.valueDeclaration);
+    const sourceFile = project.getSourceFile(fileName);
+    const bindings = findBindingStatementsWithin(type.symbol.valueDeclaration);
     
     for (const binding of bindings) {
       const startPos = binding.node.getStart();
@@ -28,14 +32,14 @@ export default function alterBindingStatements(project: Project, analysis: Analy
     }
   }
   
-  function findBindingStatementsWithin(decl: ts.Node): Binding[] {
-    let bindings = [];
+  function findBindingStatementsWithin(decl: ts.Node): BindingStatement[] {
+    const bindings = [];
     
-    let visit = (node) => {
+    const visit = (node) => {
       if (node.kind == ts.SyntaxKind.CallExpression) {
-        let call = <ts.CallExpression> node;
+        const call = <ts.CallExpression> node;
         if (call.expression.kind == ts.SyntaxKind.PropertyAccessExpression) {
-          let expr = <ts.PropertyAccessExpression> call.expression;
+          const expr = <ts.PropertyAccessExpression> call.expression;
           if (expr.name.text == 'bind') {
             bindings.push(createBinding(node, call.typeArguments));
           }
@@ -48,12 +52,12 @@ export default function alterBindingStatements(project: Project, analysis: Analy
     return bindings;
   }
   
-  function createBinding(node: ts.Node, typeArguments: ts.NodeArray<ts.TypeNode>): Binding {
+  function createBinding(node: ts.Node, typeArguments: ts.NodeArray<ts.TypeNode>): BindingStatement {
     return {
       node: node,
       service: resolveTypeReference(<ts.TypeReferenceNode> typeArguments[0]),
       component: resolveTypeReference(<ts.TypeReferenceNode> typeArguments[1])
-    }
+    };
   }
   
   function resolveTypeReference(node: ts.TypeReferenceNode): string {

@@ -1,9 +1,8 @@
 import * as ts from 'typescript'
 import {Project, Analysis} from './types';
 
-export default function injectDependencyMap(project: Project, analysis: Analysis): void {
+export default function injectMetadata(project: Project, analysis: Analysis): void {
   
-  const host = project.getLanguageServiceHost();
   const languageService = project.getLanguageService();
   const checker = project.getTypeChecker();
   
@@ -14,7 +13,7 @@ export default function injectDependencyMap(project: Project, analysis: Analysis
     const body = type.symbol.valueDeclaration;
     const payload = JSON.stringify(analysis.components);
     const injectPos = body.getChildAt(body.getChildCount() - 1).pos;
-    const injectSource = `\ncomponents = ${payload};`;
+    const injectSource = `\nmetadata = ${payload};`;
     
     const source = sourceFile.getText();
     const newSource = source.substr(0, injectPos) + injectSource + source.substr(injectPos, source.length);

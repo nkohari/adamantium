@@ -1,4 +1,4 @@
-import Forge from '../../src/Forge';
+import Forge from '../../src/adamantium/Forge';
 
 export interface IWeapon {
   hit: (string) => string
@@ -26,6 +26,10 @@ class Ninja {
 
 export class AppForge extends Forge {
   load() {
+    this.get<IWeapon>();
     this.bind<IWeapon, Katana>();
   }
 }
+
+let forge = new AppForge();
+let ninja = forge.get<Ninja>();

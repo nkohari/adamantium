@@ -1,12 +1,16 @@
 import * as ts from 'typescript';
+import {ComponentMetadataMap} from '../adamantium/types';
 import {LanguageServiceHost} from './languageServiceHost';
 
 export interface Project {
-  getLanguageServiceHost: () => LanguageServiceHost,
+  emit: () => void
+  findNodeAtPosition: (fileName: string, pos: number) => ts.Node,
+  findReferencesForNode: (node: ts.Node) => ts.ReferenceEntry[],
+  findTypeDeclaration: (name: string) => ts.ClassDeclaration | ts.InterfaceDeclaration
   getLanguageService: () => ts.LanguageService,
   getProgram: () => ts.Program,
+  getSourceFile: (fileName: string) => ts.SourceFile,
   getTypeChecker: () => ts.TypeChecker
-  emit: () => void
   updateSourceFile: (sourceFile: ts.SourceFile, newSource: string, range: ts.TextChangeRange) => void
 }
 
@@ -15,28 +19,12 @@ export interface ProjectEmitResult {
   errors: ts.Diagnostic[]
 }
 
-export interface Component {
-  type?: string
-  dependencies?: Dependency[]
-  typeParams?: string[]
-}
-
-export interface Dependency {
-  type?: string
-}
-
-export interface Binding {
-  node: ts.Node
-  service: string
-  component: string
-}
-
-export interface ForgeClass {
+export interface ForgeClassDeclaration {
   type: ts.Type
   fileName: string
 }
 
 export interface Analysis {
-  forges: ForgeClass[]
-  components: { [type: string]: Component } 
+  forges: ForgeClassDeclaration[]
+  components: ComponentMetadataMap 
 }
