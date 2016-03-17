@@ -1,0 +1,8 @@
+{
+  "ambientDependencies": {
+    "node": "registry:dt/node#4.0.0+20160311162451"
+  },
+  "dependencies": {
+    "mkdirp": "registry:npm/mkdirp#0.5.0+20160222053049"
+  }
+}
