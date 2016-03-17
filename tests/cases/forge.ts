@@ -1,6 +1,6 @@
 import Forge from '../../src/Forge';
 
-interface IWeapon {
+export interface IWeapon {
   hit: (string) => string
 }
 

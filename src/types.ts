@@ -7,6 +7,7 @@ export interface Project {
   getProgram: () => ts.Program,
   getTypeChecker: () => ts.TypeChecker
   emit: () => void
+  updateSourceFile: (sourceFile: ts.SourceFile, newSource: string, range: ts.TextChangeRange) => void
 }
 
 export interface ProjectEmitResult {
@@ -24,9 +25,15 @@ export interface Dependency {
   type?: string
 }
 
+export interface Binding {
+  node: ts.Node
+  service: string
+  component: string
+}
+
 export interface ForgeClass {
   type: ts.Type
-  sourceFile: ts.SourceFile
+  fileName: string
 }
 
 export interface Analysis {

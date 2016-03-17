@@ -3,13 +3,16 @@ abstract class Forge {
   static _adamantium: boolean = true
   protected components: {};
   
-  get<T>() {
+  get<TService>() {
   }
   
-  bind<A, B>() {
+  protected bind<TService, TComponent>() {
   }
   
-  abstract load();
+  protected abstract load();
+  
+  private _bind(service: string, component: string) {
+  }
   
 }
 

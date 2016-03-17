@@ -13,12 +13,23 @@ export default function createProject(
   let languageService = ts.createLanguageService(languageServiceHost, ts.createDocumentRegistry());
 
   return {
-    emit: emit,
+    emit,
+    updateSourceFile,
     getLanguageServiceHost: () => languageServiceHost,
     getLanguageService: () => languageService,
     getProgram: () => languageService.getProgram(),
     getTypeChecker: () => languageService.getProgram().getTypeChecker()
   };
+  
+  function updateSourceFile(sourceFile: ts.SourceFile, newSource: string, range: ts.TextChangeRange) {
+    const {fileName} = sourceFile;
+    languageServiceHost.updateScript(fileName, newSource);
+    ts.updateLanguageServiceSourceFile(
+      sourceFile,
+      languageServiceHost.getScriptSnapshot(fileName),
+      languageServiceHost.getScriptVersion(fileName),
+      range);
+  }
   
   function emit(): ProjectEmitResult {
     const program = languageService.getProgram();

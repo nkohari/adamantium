@@ -37,7 +37,7 @@ export default function analyze(project: Project): Analysis {
     if ((node.flags & ts.NodeFlags.Abstract) == 0) {
       analysis.forges.push({
         type: type,
-        sourceFile: sourceFile
+        fileName: sourceFile.fileName
       });
     }
   }

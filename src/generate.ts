@@ -2,7 +2,8 @@ import * as ts from 'typescript';
 import * as util from 'util';
 import createProject from './createProject';
 import analyze from './analyze';
-import augment from './augment';
+import injectDependencyMap from './injectDependencyMap';
+import alterBindingStatements from './alterBindingStatements';
 
 function inspect(obj, depth = null) {
   console.log(util.inspect(obj, false, depth, false));
@@ -19,5 +20,7 @@ let analysis = analyze(project);
 console.log(`Found ${analysis.forges.length} forges and ${Object.keys(analysis.components).length} components`)
 inspect(analysis.components);
 
-augment(project, analysis);
+injectDependencyMap(project, analysis);
+alterBindingStatements(project, analysis);
+
 project.emit();
