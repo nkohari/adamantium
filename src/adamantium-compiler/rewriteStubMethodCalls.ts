@@ -3,9 +3,9 @@ import {Project, Analysis} from './types';
 
 interface StubMethodCall {
   fileName: string
-  name: string
+  method: string
   node: ts.CallExpression
-  lhs:  ts.LeftHandSideExpression
+  target: string
   args: string[]
 }
 
@@ -29,7 +29,7 @@ export default function rewriteStubMethodCalls(project: Project, analysis: Analy
       const startPos = call.node.getStart();
       const endPos = call.node.getEnd();
       
-      const injectSource = generateReplacementCode(call);
+      const injectSource = `${call.target}.${StubMethodTable[call.method]}(${call.args.join(', ')})`
       const source = sourceFile.getText();
       const newSource = source.substr(0, startPos) + injectSource + source.substr(endPos);
       
@@ -38,14 +38,6 @@ export default function rewriteStubMethodCalls(project: Project, analysis: Analy
       
       project.updateSourceFile(sourceFile, newSource, range);
     }
-  }
-  
-  function generateReplacementCode(call: StubMethodCall): string {
-    console.log(call.lhs);
-    // TODO: Won't always be "this"
-    let method = `this.${StubMethodTable[call.name]}`;
-    let args = call.args.map((arg) => `'${arg}'`).join(', ');
-    return `${method}(${args})`
   }
   
   function findStubMethodCalls(): StubMethodCall[] {
@@ -61,47 +53,42 @@ export default function rewriteStubMethodCalls(project: Project, analysis: Analy
         const name = checker.getSymbolAtLocation(decl.name).getName();
         if (StubMethodTable[name]) {
           for (const ref of project.findReferencesForNode(decl)) {
-            const file = project.getSourceFile(ref.fileName);
-            const node = project.findNodeAtPosition(file.fileName, ref.textSpan.start);
-            console.log(ref);
+            calls.push(createStubMethodCall(ref));
           }
         }
       }
     }
     
-    /*
-    const visit = (node) => {
-      if (node.kind == ts.SyntaxKind.CallExpression) {
-        const call = <ts.CallExpression> node;
-        if (call.expression.kind == ts.SyntaxKind.PropertyAccessExpression) {
-          const lhs  = <ts.PropertyAccessExpression> call.expression;
-          const name = lhs.name.text;
-          if (Object.keys(StubMethodTable).indexOf(name) >= 0) {
-            calls.push(createStubMethodCall(call, lhs));
-          }
-        }
-      }
-      ts.forEachChild(node, visit);
-    };
-    
-    ts.forEachChild(decl, visit);
-    */
-    
     return calls;
   }
   
-  function createStubMethodCall(node: ts.CallExpression, lhs: ts.LeftHandSideExpression) {
+  function createStubMethodCall(ref: ts.ReferenceEntry): StubMethodCall {
     
-    let args = node.typeArguments
-      .map((arg) => checker.getSymbolAtLocation((<ts.TypeReferenceNode> arg).typeName).getName())
-      .concat(node.arguments.map((arg) => arg.getText()))
-      
+    const method = <ts.Identifier> project.getNodeAtPosition(ref.fileName, ref.textSpan.start);
+    const call   = <ts.CallExpression> method.parent.parent;
+    const target = (<ts.PropertyAccessExpression> call.expression).expression;
+    
+    let resolveType = (arg: ts.TypeNode): string => {
+      const symbol = checker.getSymbolAtLocation(arg);
+      if (symbol) {
+        return checker.getFullyQualifiedName(symbol);
+      }
+      else {
+        // TODO: It seems like for some types (interfaces?) the checker won't
+        // resolve a symbol. Falling back on the text is a bad idea.
+        return arg.getText();
+      }
+    };
+    
+    const typeArguments = call.typeArguments.map((arg) => `'${resolveType(arg)}'`)
+    const regularArguments = call.arguments.map((arg) => arg.getText());
+    
     return {
-      name,
-      node,
-      lhs,
-      args,
-      fileName: node.getSourceFile().fileName
+      fileName: ref.fileName,
+      node: call,
+      method: method.getText(),
+      target: target.getText(),
+      args: typeArguments.concat(regularArguments)
     };
     
   }

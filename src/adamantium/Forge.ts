@@ -33,7 +33,7 @@ abstract class Forge {
    * @param TService   The service to bind from
    * @param TComponent The component to bind to
    */
-  bind<TService, TComponent extends TService>() {
+  bind<TService, TComponent extends TService>(...args: any[]) {
     throw new Error("Stub bind() method was called. Did you run the adamantium compiler?");
   }
   
@@ -55,7 +55,7 @@ abstract class Forge {
     return null;
   }
   
-  private weakBind(service: string, component: string): void {
+  private weakBind(service: string, component: string, ...args: any[]): void {
   }
   
 }

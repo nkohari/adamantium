@@ -44,7 +44,7 @@ export default function analyze(project: Project): Analysis {
   function addComponent(type: ts.Type): void {
     const ctor = selectConstructor(type.getConstructSignatures());
     const baseTypes = checker.getBaseTypes(<ts.InterfaceType> type);
-    const name = type.symbol.getName();
+    const name = checker.getFullyQualifiedName(type.symbol);
     analysis.components[name] = {
       type: name,
       dependencies: ctor.parameters.map(analyzeDependency),

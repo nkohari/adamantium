@@ -27,7 +27,7 @@ class Ninja {
 export class AppForge extends Forge {
   load() {
     this.get<IWeapon>();
-    this.bind<IWeapon, Katana>();
+    this.bind<IWeapon, Katana>(42, 'example');
   }
 }
 

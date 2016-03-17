@@ -4,10 +4,10 @@ import {LanguageServiceHost} from './languageServiceHost';
 
 export interface Project {
   emit: () => void
-  findNodeAtPosition: (fileName: string, pos: number) => ts.Node,
   findReferencesForNode: (node: ts.Node) => ts.ReferenceEntry[],
   findTypeDeclaration: (name: string) => ts.ClassDeclaration | ts.InterfaceDeclaration
   getLanguageService: () => ts.LanguageService,
+  getNodeAtPosition: (fileName: string, pos: number) => ts.Node,
   getProgram: () => ts.Program,
   getSourceFile: (fileName: string) => ts.SourceFile,
   getTypeChecker: () => ts.TypeChecker

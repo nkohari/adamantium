@@ -14,29 +14,29 @@ export default function createProject(
 
   return {
     emit,
-    findNodeAtPosition,
     findReferencesForNode,
     findTypeDeclaration,
     getLanguageService: () => languageService,
+    getNodeAtPosition,
     getProgram: () => languageService.getProgram(),
     getSourceFile: (fileName: string) => languageService.getSourceFile(fileName),
     getTypeChecker: () => languageService.getProgram().getTypeChecker(),
     updateSourceFile
   };
   
-  function findNodeAtPosition(fileName: string, pos: number): ts.Node {
+  function getNodeAtPosition(fileName: string, position: number): ts.Node {
     const sourceFile = languageService.getSourceFile(fileName);
-    let foundNode: ts.Node = undefined;
+    let lastMatchingNode: ts.Node = undefined;
     
     let visit = (node: ts.Node) => {
-      if (node.getStart() <= pos && node.getEnd() >= pos) {
-        foundNode = node;
+      if (node.getStart() <= position && node.getEnd() >= position) {
+        lastMatchingNode = node;
       }
-      if (!foundNode) ts.forEachChild(node, visit);
+      ts.forEachChild(node, visit);
     }
     
     ts.forEachChild(sourceFile, visit);
-    return foundNode;
+    return lastMatchingNode;
   }
   
   function findReferencesForNode(node: ts.Node): ts.ReferenceEntry[] {
