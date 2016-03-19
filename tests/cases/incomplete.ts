@@ -1,6 +1,6 @@
 import Forge from '../../src/adamantium/Forge';
 
-export interface IWeapon {
+interface IWeapon {
   hit: (string) => string
 }
 
@@ -26,8 +26,6 @@ class Ninja {
 
 export class AppForge extends Forge {
   load() {
-    this.get<IWeapon>();
-    this.bind<IWeapon, Katana>(42, 'example');
   }
 }
 

@@ -2,30 +2,68 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
 import * as ts from 'typescript';
-import {Project, ProjectEmitResult} from './types';
-import {LanguageServiceHost} from './languageServiceHost';
+import LanguageServiceHost from './LanguageServiceHost';
 
-export default function createProject(
+export interface Project {
+  emit: () => void
+  findReferencesForNode: (node: ts.Node) => ts.ReferenceEntry[],
+  findTypeDeclaration: (name: string) => ts.ClassDeclaration | ts.InterfaceDeclaration
+  getKeyForType: (type: ts.Type) => string
+  getLanguageService: () => ts.LanguageService,
+  getNodeAtPosition: (fileName: string, pos: number) => ts.Node,
+  getProgram: () => ts.Program,
+  getSourceFile: (fileName: string) => ts.SourceFile,
+  getTypeChecker: () => ts.TypeChecker
+  updateSourceFile: (sourceFile: ts.SourceFile, newSource: string, range: ts.TextChangeRange) => void
+}
+
+export interface ProjectEmitResult {
+  success: boolean,
+  errors: ts.Diagnostic[]
+}
+
+export function createProject(
   rootFiles: string[],
   options: ts.CompilerOptions = ts.getDefaultCompilerOptions()): Project {
 
   let languageServiceHost = new LanguageServiceHost(rootFiles, options);
   let languageService = ts.createLanguageService(languageServiceHost, ts.createDocumentRegistry());
+  
+  // SourceFiles returned from the LanguageService aren't bound, so any calls involving
+  // symbols will fail in mysterious ways. This is just here to protect from accidents.
+  // (See https://github.com/Microsoft/TypeScript/issues/7581)
+  languageService.getSourceFile = (fileName: string): ts.SourceFile => {
+    console.warn("WARNING: Call to languageService.getSourceFile()");
+    return languageService.getProgram().getSourceFile(fileName);
+  }
 
   return {
     emit,
     findReferencesForNode,
     findTypeDeclaration,
+    getKeyForType,
     getLanguageService: () => languageService,
     getNodeAtPosition,
     getProgram: () => languageService.getProgram(),
-    getSourceFile: (fileName: string) => languageService.getSourceFile(fileName),
-    getTypeChecker: () => languageService.getProgram().getTypeChecker(),
+    getSourceFile,
+    getTypeChecker,
     updateSourceFile
   };
   
+  function getSourceFile(fileName: string): ts.SourceFile {
+    return languageService.getProgram().getSourceFile(fileName);
+  }
+  
+  function getTypeChecker() {
+    return languageService.getProgram().getTypeChecker();
+  }
+  
+  function getKeyForType(type: ts.Type): string {
+    return getTypeChecker().getFullyQualifiedName(type.symbol);
+  }
+  
   function getNodeAtPosition(fileName: string, position: number): ts.Node {
-    const sourceFile = languageService.getSourceFile(fileName);
+    const sourceFile = getSourceFile(fileName);
     let lastMatchingNode: ts.Node = undefined;
     
     let visit = (node: ts.Node) => {

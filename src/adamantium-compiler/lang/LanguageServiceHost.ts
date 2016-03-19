@@ -1,12 +1,12 @@
-import * as fs from 'fs';
 import * as ts from 'typescript';
+import * as fs from 'fs';
 
 interface ScriptInfo {
   text: string
   version: number
 }
 
-export class LanguageServiceHost implements ts.LanguageServiceHost {
+class LanguageServiceHost implements ts.LanguageServiceHost {
   
   files: { [name: string]: ScriptInfo } = {};
   
@@ -33,7 +33,7 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
   }
   
   getScriptFileNames() {
-    return this.rootFileNames;
+    return Object.keys(this.files);
   }
   
   getScriptVersion(fileName: string) {
@@ -59,7 +59,7 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
     if (!info) {
       this.files[fileName] = info = {
         text: fs.readFileSync(fileName).toString(),
-        version: 0
+        version: 1
       };
       console.log(`Loaded ${fileName}`)
     }
@@ -67,3 +67,5 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
   }
   
 }
+
+export default LanguageServiceHost;
