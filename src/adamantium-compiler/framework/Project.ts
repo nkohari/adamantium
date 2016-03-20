@@ -2,20 +2,25 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
 import * as ts from 'typescript';
+import StringSymbolWriter from './StringSymbolWriter';
 import LanguageServiceHost from './LanguageServiceHost';
 
 export interface Project {
   emit: () => void
+  createSymbolWriter: () => StringSymbolWriter,
   findReferencesForNode: (node: ts.Node) => ts.ReferenceEntry[],
   findTypeDeclaration: (name: string) => ts.ClassDeclaration | ts.InterfaceDeclaration
+  getDefinition: (node: ts.Node) => ts.Identifier
   getKeyForType: (type: ts.Type) => string
-  getLanguageService: () => ts.LanguageService,
   getNodeAtPosition: (fileName: string, pos: number) => ts.Node,
   getProgram: () => ts.Program,
   getSourceFile: (fileName: string) => ts.SourceFile,
+  getSourceFileForNode: (node: ts.Node) => ts.SourceFile,
   getTypeChecker: () => ts.TypeChecker
   updateSourceFile: (sourceFile: ts.SourceFile, newSource: string, range: ts.TextChangeRange) => void
 }
+
+export default Project;
 
 export interface ProjectEmitResult {
   success: boolean,
@@ -29,37 +34,44 @@ export function createProject(
   let languageServiceHost = new LanguageServiceHost(rootFiles, options);
   let languageService = ts.createLanguageService(languageServiceHost, ts.createDocumentRegistry());
   
-  // SourceFiles returned from the LanguageService aren't bound, so any calls involving
-  // symbols will fail in mysterious ways. This is just here to protect from accidents.
-  // (See https://github.com/Microsoft/TypeScript/issues/7581)
-  languageService.getSourceFile = (fileName: string): ts.SourceFile => {
-    console.warn("WARNING: Call to languageService.getSourceFile()");
-    return languageService.getProgram().getSourceFile(fileName);
-  }
-
   return {
     emit,
+    createSymbolWriter,
     findReferencesForNode,
     findTypeDeclaration,
+    getDefinition,
     getKeyForType,
-    getLanguageService: () => languageService,
     getNodeAtPosition,
     getProgram: () => languageService.getProgram(),
     getSourceFile,
+    getSourceFileForNode,
     getTypeChecker,
     updateSourceFile
   };
+  
+  function createSymbolWriter(): StringSymbolWriter {
+    return new StringSymbolWriter();
+  }
+  
+  function getDefinition(node: ts.Node): ts.Identifier {
+    const defs = languageService.getDefinitionAtPosition(node.getSourceFile().fileName, node.getStart());
+    return defs && <ts.Identifier> getNodeAtPosition(defs[0].fileName, defs[0].textSpan.start);
+  }
+  
+  function getKeyForType(type: ts.Type): string {
+    return getTypeChecker().getFullyQualifiedName(type.symbol);
+  }
   
   function getSourceFile(fileName: string): ts.SourceFile {
     return languageService.getProgram().getSourceFile(fileName);
   }
   
-  function getTypeChecker() {
-    return languageService.getProgram().getTypeChecker();
+  function getSourceFileForNode(node: ts.Node): ts.SourceFile {
+    return getSourceFile(node.getSourceFile().fileName);
   }
   
-  function getKeyForType(type: ts.Type): string {
-    return getTypeChecker().getFullyQualifiedName(type.symbol);
+  function getTypeChecker() {
+    return languageService.getProgram().getTypeChecker();
   }
   
   function getNodeAtPosition(fileName: string, position: number): ts.Node {

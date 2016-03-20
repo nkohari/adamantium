@@ -24,10 +24,5 @@ class Ninja {
   }
 }
 
-export class AppForge extends Forge {
-  load() {
-  }
-}
-
-let forge = new AppForge();
+let forge = new Forge();
 let ninja = forge.get<Ninja>();

@@ -24,11 +24,7 @@ class Ninja {
   }
 }
 
-export class AppForge extends Forge {
-  load() {
-    this.bind<IWeapon, Katana>(42, 'example');
-  }
-}
+var forge = new Forge();
+forge.bind<IWeapon, Katana>();
 
-let forge = new AppForge();
 let ninja = forge.get<Ninja>();
