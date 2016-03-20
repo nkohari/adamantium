@@ -1,8 +1,9 @@
-export {default as Plan} from './Plan';
-export {default as Binding} from './Binding';
-export {default as Component} from './Component';
-export {default as Container} from './Container';
-export {default as Inspector, createInspector} from './Inspector';
-export {default as MagicMethodCall, MagicMethodKind} from './MagicMethodCall'
-export {default as Project, ProjectEmitResult, createProject} from './Project';
-export {default as Request} from './Request';
+export {Plan} from './Plan';
+export {Binding, BindingKind} from './Binding';
+export {Component} from './Component';
+export {Container} from './Container';
+export {Dependency} from './Dependency';
+export {Inspector, createInspector} from './Inspector';
+export {MagicMethodCall, MagicMethodKind} from './MagicMethodCall'
+export {Project, ProjectEmitResult, createProject} from './Project';
+export {Request} from './Request';

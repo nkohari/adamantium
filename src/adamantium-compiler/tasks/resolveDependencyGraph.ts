@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {Project, Plan, Binding, Component, Container, MagicMethodKind, Request} from '../framework';
+import {Project, Plan, Binding, BindingKind, Component, Container, Dependency, MagicMethodKind, Request} from '../framework';
 
 export default function resolveDependencyGraph(project: Project, plan: Plan): void {
   
@@ -19,10 +19,10 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
           requests.push(new Request(call.typeArguments[0]));
           break;
         case MagicMethodKind.Bind:
-          const [service, component] = call.typeArguments;
-          const key = project.getKeyForType(service);
-          container.addBinding(new Binding(key, service, component));
-          requests.push(new Request(component));
+          const [from, to] = call.typeArguments;
+          const key = project.getKeyForType(from);
+          container.addBinding(new Binding(BindingKind.Declared, key, from, to));
+          requests.push(new Request(to));
           break;
       }
     }
@@ -32,7 +32,7 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
       const matches = resolveBindingsForRequest(container, request);
       
       for (const binding of matches) {
-        const {symbol} = binding.component;
+        const {symbol} = binding.to;
         const target = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
         const constructors = target.getConstructSignatures();
         
@@ -42,12 +42,12 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
         }
         
         const bestConstructor = selectConstructor(constructors);
-        const dependencies: string[] = [];
+        const dependencies: Dependency[] = [];
         
         for (const param of bestConstructor.parameters) {
           const type = checker.getTypeOfSymbolAtLocation(param, param.valueDeclaration);
           const key  = project.getKeyForType(type);
-          dependencies.push(key);
+          dependencies.push(new Dependency(key));
           if (!container.hasBindings(key)) {
             requests.push(new Request(type, request.type));
           }
@@ -63,7 +63,7 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
     let matches = container.getBindings(key);
     
     if (matches.length == 0) {
-      const binding = new Binding(key, request.type, request.type);
+      const binding = new Binding(BindingKind.Implicit, key, request.type, request.type);
       container.addBinding(binding);
       matches = [binding];
     }

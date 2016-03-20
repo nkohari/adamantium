@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {Project, Plan, Container, MagicMethodCall, MagicMethodKind} from '../framework';
+import {Project, Plan, BindingKind, Container, MagicMethodCall, MagicMethodKind} from '../framework';
 
 interface SourceChange {
   newSource: string
@@ -13,6 +13,7 @@ export default function augmentSource(project: Project, plan: Plan): void {
   
   for (const container of plan.getContainers()) {
     rewriteCalls(container);
+    addImplicitBindings(container);
     addComponentRegistrations(container);
   }
   
@@ -37,21 +38,27 @@ export default function augmentSource(project: Project, plan: Plan): void {
       replaceNode(call.node, newText);
     }
   }
-
+  
+  function addImplicitBindings(container: Container) {
+    const statements = container.getBindings()
+    .filter((b) => b.kind == BindingKind.Implicit)
+    .map((binding) => {
+      const target = project.getKeyForType(binding.to);
+      return `${container.name}.addBinding('${binding.key}', '${target}');`;
+    });
+    insertSourceAfter(container.declaration, '\n' + statements.join('\n'));
+  }
   
   function addComponentRegistrations(container: Container) {
-    
-    // TODO: This is a very naive implementation. We'll need to add imports as well.
+    // TODO: Do we need to draw in imports to be able to correctly reference the constructors?
     const statements = container.getComponents().map((component) => {
       const type = component.factory.getReturnType();
-      const ctor = checker.symbolToString(type.symbol); 
-      const deps = component.dependencies.map((dep) => `'${dep}'`).join(', ');
-      const str = `${container.name}.addComponent('${component.key}', ${ctor}, [${deps}]);`
-      return str; 
+      const ctor = checker.symbolToString(type.symbol);
+      const deps = component.dependencies.map((dep) => `{key: '${dep.key}'}`);
+      const str = `${container.name}.addComponent('${component.key}', ${ctor}, [${deps.join(', ')}]);`
+      return str;
     });
-    
     insertSourceAfter(container.declaration, '\n' + statements.join('\n'));
-    
   }
   
   function replaceNode(node: ts.Node, newText: string) {
@@ -65,19 +72,23 @@ export default function augmentSource(project: Project, plan: Plan): void {
     const span = ts.createTextSpanFromBounds(startPos, endPos);
     const range = ts.createTextChangeRange(span, newText.length);
     
+    console.log('-----------------------');
+    console.log(newSource);
     project.updateSourceFile(sourceFile, newSource, range);
   }
   
   function insertSourceAfter(node: ts.Node, text: string) {
     const sourceFile = project.getSourceFileForNode(node);
     
-    const pos = node.getEnd() + 1;
-    const source = sourceFile.getText();
+    const pos = node.getFullStart() + node.getFullWidth() + 1;
+    const source = sourceFile.getFullText();
     const newSource = source.substr(0, pos) + text + source.substr(pos);
 
     const span = ts.createTextSpan(pos, 0);
     const range = ts.createTextChangeRange(span, text.length);
     
+    console.log('-----------------------');
+    console.log(newSource);
     project.updateSourceFile(sourceFile, newSource, range);
   }
  

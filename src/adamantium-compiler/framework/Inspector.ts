@@ -1,28 +1,35 @@
 import * as ts from 'typescript';
-import Component from './Component';
-import Container from './Container';
-import Plan from './Plan';
-import Project from './Project';
-import MagicMethodCall, {MagicMethodKind} from './MagicMethodCall';
+import {Binding, BindingKind, Component, Container, Dependency, Plan, Project, MagicMethodCall, MagicMethodKind} from './';
 
-interface Inspector {
+export interface Inspector {
+  inspectBinding: (binding: Binding) => any
   inspectCall: (call: MagicMethodCall) => any
   inspectContainer: (container: Container) => any
+  inspectDependency: (dependency: Dependency) => any
   inspectNode: (node: ts.Node) => any
   inspectPlan: (plan: Plan) => any
 }
-
-export default Inspector;
 
 export function createInspector(project: Project): Inspector {
   
   const checker = project.getTypeChecker();
   
   return {
+    inspectBinding,
     inspectCall,
     inspectContainer,
+    inspectDependency,
     inspectNode,
     inspectPlan
+  }
+  
+  function inspectBinding(binding: Binding): any {
+    return {
+      key:  binding.key,
+      kind: (binding.kind == BindingKind.Declared ? 'declared' : 'implicit'),
+      from: project.getKeyForType(binding.from),
+      to:   project.getKeyForType(binding.to)
+    }
   }
   
   function inspectCall(call: MagicMethodCall): any {
@@ -37,11 +44,17 @@ export function createInspector(project: Project): Inspector {
     }
   }
   
+  function inspectDependency(dependency: Dependency): any {
+    return {
+      key: dependency.key
+    }
+  }
+  
   function inspectComponent(component: Component): any {
     return {
       key: component.key,
       factory: component.factory.getReturnType().symbol.name,
-      args: component.dependencies
+      args: component.dependencies.map(inspectDependency)
     }
   }
   
@@ -49,7 +62,7 @@ export function createInspector(project: Project): Inspector {
     return {
       id: container.id,
       node: inspectNode(container.node),
-      //bindings: container.getBindings().map(inspectBinding),
+      bindings: container.getBindings().map(inspectBinding),
       calls: container.getCalls().map(inspectCall),
       components: container.getComponents().map(inspectComponent),
     }

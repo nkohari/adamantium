@@ -1,9 +1,7 @@
 import * as ts from 'typescript';
-import Binding from './Binding';
-import Component from './Component';
-import MagicMethodCall from './MagicMethodCall';
+import {Binding, Component, MagicMethodCall} from './';
 
-class Container {
+export class Container {
   
   id: number
   name: string
@@ -43,8 +41,17 @@ class Container {
     return this.bindings[key] !== undefined;
   }
   
-  getBindings(key: string): Binding[] {
-    return this.bindings[key] || [];
+  getBindings(key?: string): Binding[] {
+    if (key !== undefined) {
+      return this.bindings[key] || [];
+    }
+    else {
+      let bindings = [];
+      for (const key of Object.keys(this.bindings)) {
+        bindings = bindings.concat(this.bindings[key]);
+      }
+      return bindings;
+    }
   }
   
   getCalls(): MagicMethodCall[] {
@@ -60,5 +67,3 @@ class Container {
   }
   
 }
-
-export default Container;

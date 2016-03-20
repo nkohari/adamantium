@@ -1,17 +1,16 @@
 import * as ts from 'typescript';
+import {Dependency} from './'
 
-class Component {
+export class Component {
   
   key: string
   factory: ts.Signature
-  dependencies: string[]
+  dependencies: Dependency[]
   
-  constructor(key: string, factory: ts.Signature, dependencies: string[]) {
+  constructor(key: string, factory: ts.Signature, dependencies: Dependency[]) {
     this.key = key;
     this.factory = factory;
     this.dependencies = dependencies;
   }
   
 }
-
-export default Component;

@@ -1,12 +1,13 @@
-import BindingMap from './BindingMap';
-import {Binding} from './types';
+import {Binding, Component, Dependency} from './types';
 
-export default class Forge {
+export class Forge {
   
-  protected bindings: BindingMap;
+  protected bindings: { [key: string]: Binding[] };
+  protected components: { [key: string]: Component };
   
   constructor() {
-    
+    this.bindings = {};
+    this.components = {};
   }
   
   get<TService>(): TService {
@@ -21,22 +22,47 @@ export default class Forge {
     throw new Error("Stub bind() method was called. Did you run the adamantium compiler?");
   }
   
-  private addBinding(from: string, to: string) {
+  private addBinding(key: string, component: string) {
+    let list = this.bindings[key];
+    if (!list) {
+      list = this.bindings[key] = [];
+    }
+    list.push({key, component});
   }
   
-  private addComponent(key: string, ctor: Function, dependencies: string[]) {
+  private addComponent(key: string, factory: Function, dependencies: Dependency[]) {
+    this.components[key] = {key, factory, dependencies};
   }
   
-  private getBindings(): Binding[] {
+  private resolve(key: string): any {
+    const bindings = this.getBindings(key);
+    
+    if (bindings.length == 0) {
+      throw new Error(`Somehow we're missing a binding for key ${key}. This shouldn't happen.`)
+    }
+    else if (bindings.length > 1) {
+      // TODO: Multi-get
+      throw new Error(`Couldn't resolve single binding for key ${key}.`)
+    }
+    
+    const binding = bindings[0];
+    const component = this.components[binding.component];
+    const args = component.dependencies.map((dep) => this.resolve(dep.key));
+    
+    return this.createInstance(component.factory, args);
+  }
+  
+  private resolveAll(key: string): any[] {
+    // TODO: Multi-get
     return null;
   }
   
-  private resolve(service: string): any {
-    return null;
+  private getBindings(key: string): Binding[] {
+    return this.bindings[key] || [];
   }
   
-  private resolveAll(service: string): any[] {
-    return null;
+  private createInstance(ctor: Function, args: any[]): any {
+    return new (Function.prototype.bind.apply(ctor, [null].concat(args)));
   }
   
 }

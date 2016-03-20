@@ -1,13 +1,12 @@
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
 import * as ts from 'typescript';
-import StringSymbolWriter from './StringSymbolWriter';
-import LanguageServiceHost from './LanguageServiceHost';
+import {LanguageServiceHost} from './LanguageServiceHost';
 
 export interface Project {
   emit: () => void
-  createSymbolWriter: () => StringSymbolWriter,
   findReferencesForNode: (node: ts.Node) => ts.ReferenceEntry[],
   findTypeDeclaration: (name: string) => ts.ClassDeclaration | ts.InterfaceDeclaration
   getDefinition: (node: ts.Node) => ts.Identifier
@@ -33,10 +32,11 @@ export function createProject(
 
   let languageServiceHost = new LanguageServiceHost(rootFiles, options);
   let languageService = ts.createLanguageService(languageServiceHost, ts.createDocumentRegistry());
+  let keys = {};
+  let nextId = 0;
   
   return {
     emit,
-    createSymbolWriter,
     findReferencesForNode,
     findTypeDeclaration,
     getDefinition,
@@ -49,17 +49,19 @@ export function createProject(
     updateSourceFile
   };
   
-  function createSymbolWriter(): StringSymbolWriter {
-    return new StringSymbolWriter();
-  }
-  
   function getDefinition(node: ts.Node): ts.Identifier {
     const defs = languageService.getDefinitionAtPosition(node.getSourceFile().fileName, node.getStart());
     return defs && <ts.Identifier> getNodeAtPosition(defs[0].fileName, defs[0].textSpan.start);
   }
   
   function getKeyForType(type: ts.Type): string {
-    return getTypeChecker().getFullyQualifiedName(type.symbol);
+    const checker = getTypeChecker();
+    const fqName = checker.getFullyQualifiedName(type.symbol);
+    let key = keys[fqName];
+    if (!key) {
+      key = keys[fqName] = `${type.symbol.name}#${++nextId}`
+    }
+    return key;
   }
   
   function getSourceFile(fileName: string): ts.SourceFile {

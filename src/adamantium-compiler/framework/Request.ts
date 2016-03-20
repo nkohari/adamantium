@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 
-class Request {
+export class Request {
   
   type: ts.Type
   parent: ts.Type
@@ -11,5 +11,3 @@ class Request {
   }
 
 }
-
-export default Request;

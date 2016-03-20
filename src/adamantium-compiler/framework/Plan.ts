@@ -1,6 +1,5 @@
 import * as ts from 'typescript'
-import Container from './Container';
-import MagicMethodCall from './MagicMethodCall';
+import {Container, MagicMethodCall} from './';
 
 export class Plan {
   
@@ -32,5 +31,3 @@ export class Plan {
   }
   
 }
-
-export default Plan;

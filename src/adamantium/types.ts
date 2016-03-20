@@ -1,16 +1,14 @@
-export type ComponentMetadataMap = { [type: string]: ComponentMetadata };
-
 export interface Binding {
-  service: string
+  key: string
   component: string
 }
 
-export interface ComponentMetadata {
-  type: string
-  dependencies: DependencyMetadata[]
-  typeParams?: string[]
+export interface Component {
+  key: string
+  factory: Function
+  dependencies: Dependency[]
 }
 
-export interface DependencyMetadata {
-  type: string
+export interface Dependency {
+  key: string
 }

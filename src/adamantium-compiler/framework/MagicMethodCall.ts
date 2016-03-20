@@ -6,7 +6,7 @@ export enum MagicMethodKind {
   GetAll = 3,
 }
 
-interface MagicMethodCall {
+export interface MagicMethodCall {
   kind: MagicMethodKind
   fileName: string
   node: ts.CallExpression
@@ -15,5 +15,3 @@ interface MagicMethodCall {
   typeArguments: ts.Type[]
   arguments: string[]
 }
-
-export default MagicMethodCall;

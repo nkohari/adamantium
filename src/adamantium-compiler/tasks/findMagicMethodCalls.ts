@@ -33,9 +33,6 @@ export default function findMagicMethodCalls(project: Project, plan: Plan): void
     const call   = <ts.CallExpression> method.parent.parent;
     const target = (<ts.PropertyAccessExpression> call.expression).expression;
     
-    const def = project.getDefinition(target);
-    console.log(def);
-    
     return {
       kind,
       fileName: ref.fileName,

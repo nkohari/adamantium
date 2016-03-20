@@ -1,17 +1,22 @@
 import * as ts from 'typescript';
 
-class Binding {
+export enum BindingKind {
+  Declared,
+  Implicit
+}
+
+export class Binding {
   
+  kind: BindingKind
   key: string
-  service: ts.Type
-  component: ts.Type
+  from: ts.Type
+  to: ts.Type
   
-  constructor(key: string, service: ts.Type, component: ts.Type) {
+  constructor(kind: BindingKind, key: string, from: ts.Type, to: ts.Type) {
+    this.kind = kind;
     this.key = key;
-    this.service = service;
-    this.component = component;
+    this.from = from;
+    this.to = to;
   }
   
 }
-
-export default Binding;

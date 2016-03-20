@@ -1,2 +1,2 @@
-export {default as Forge} from './Forge';
-export {Binding, ComponentMetadata, DependencyMetadata} from './types';
+export {Forge} from './Forge';
+export {Binding, Component, Dependency} from './types';

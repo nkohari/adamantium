@@ -9,7 +9,7 @@
   "exclude": [
     "typings/browser",
     "typings/browser.d.ts",
-    "tests/cases",
+    "tests",
     "node_modules"
   ]
 }

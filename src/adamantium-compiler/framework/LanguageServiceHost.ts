@@ -6,7 +6,7 @@ interface ScriptInfo {
   version: number
 }
 
-class LanguageServiceHost implements ts.LanguageServiceHost {
+export class LanguageServiceHost implements ts.LanguageServiceHost {
   
   files: { [name: string]: ScriptInfo } = {};
   
@@ -67,5 +67,3 @@ class LanguageServiceHost implements ts.LanguageServiceHost {
   }
   
 }
-
-export default LanguageServiceHost;
