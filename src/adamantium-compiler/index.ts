@@ -1,7 +1,8 @@
 import * as ts from 'typescript';
-import * as util from 'util';
-import {Plan, createProject, createInspector} from './framework';
+import {Plan} from './model';
+import {createProject, createInspector} from './framework';
 import {findMagicMethodCalls, resolveDependencyGraph, augmentSource} from './tasks';
+let {sys} = ts;
 
 let project = createProject(process.argv.slice(2), {
   outDir: '.output',
@@ -15,7 +16,7 @@ const plan = new Plan();
 findMagicMethodCalls(project, plan);
 resolveDependencyGraph(project, plan);
 
-console.log('Plan:', util.inspect(inspector.inspectPlan(plan), false, null));
+sys.write(JSON.stringify(inspector.inspectPlan(plan), null, 2) + sys.newLine);
 
 augmentSource(project, plan);
 project.emit();

@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import * as fs from 'fs';
+let {sys} = ts;
 
 interface ScriptInfo {
   text: string
@@ -24,7 +24,7 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
     else {
       file.text = newText;
       file.version++;
-      console.log(`Updated ${fileName} to version ${file.version}`);
+      sys.write(`Updated ${fileName} to version ${file.version}` + sys.newLine);
     }
   }
   
@@ -47,7 +47,7 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
   }
   
   getCurrentDirectory() {
-    return process.cwd();
+    return sys.getCurrentDirectory();
   }
   
   getDefaultLibFileName(options: ts.CompilerOptions) {
@@ -58,10 +58,10 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
     let info = this.files[fileName];
     if (!info) {
       this.files[fileName] = info = {
-        text: fs.readFileSync(fileName).toString(),
+        text: sys.readFile(fileName),
         version: 1
       };
-      console.log(`Loaded ${fileName}`)
+      sys.write(`Loaded ${fileName}` + sys.newLine);
     }
     return info;
   }

@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import {Project, Plan, BindingKind, Container, MagicMethodCall, MagicMethodKind} from '../framework';
+import {Project} from '../framework';
+import {Plan, BindingKind, Container, MagicMethodCall, MagicMethodKind} from '../model';
 
 interface SourceChange {
   newSource: string

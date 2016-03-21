@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import {Project, Plan, Binding, BindingKind, Component, Container, Dependency, MagicMethodKind, Request} from '../framework';
+import {Project} from '../framework';
+import {Plan, Binding, Component, Container, Dependency, MagicMethodKind, Request} from '../model';
 
 export default function resolveDependencyGraph(project: Project, plan: Plan): void {
   
@@ -21,7 +22,7 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
         case MagicMethodKind.Bind:
           const [from, to] = call.typeArguments;
           const key = project.getKeyForType(from);
-          container.addBinding(new Binding(BindingKind.Declared, key, from, to));
+          container.addBinding(Binding.declared(key, from, to));
           requests.push(new Request(to));
           break;
       }
@@ -63,7 +64,7 @@ export default function resolveDependencyGraph(project: Project, plan: Plan): vo
     let matches = container.getBindings(key);
     
     if (matches.length == 0) {
-      const binding = new Binding(BindingKind.Implicit, key, request.type, request.type);
+      const binding = Binding.implicit(key, request.type, request.type);
       container.addBinding(binding);
       matches = [binding];
     }

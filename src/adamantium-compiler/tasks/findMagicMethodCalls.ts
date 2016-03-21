@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import {Project, Plan, MagicMethodCall, MagicMethodKind} from '../framework';
+import {Project} from '../framework';
+import {Plan, MagicMethodCall, MagicMethodKind} from '../model';
 
 const MagicMethods = {
   'bind':   MagicMethodKind.Bind,

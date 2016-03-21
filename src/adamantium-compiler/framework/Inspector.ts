@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import {Binding, BindingKind, Component, Container, Dependency, Plan, Project, MagicMethodCall, MagicMethodKind} from './';
+import {Project} from './';
+import {Binding, BindingKind, Component, Container, Dependency, Plan, MagicMethodCall, MagicMethodKind} from '../model';
 
 export interface Inspector {
   inspectBinding: (binding: Binding) => any

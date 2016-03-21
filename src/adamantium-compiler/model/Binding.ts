@@ -19,4 +19,12 @@ export class Binding {
     this.to = to;
   }
   
+  static declared(key: string, from: ts.Type, to: ts.Type) {
+    return new Binding(BindingKind.Declared, key, from, to);
+  }
+  
+  static implicit(key: string, from: ts.Type, to: ts.Type) {
+    return new Binding(BindingKind.Declared, key, from, to);
+  }
+  
 }
