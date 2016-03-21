@@ -1,9 +1,8 @@
 {
   "name": "adamantium",
   "version": "0.1.0",
-  "description": "adamantium",
+  "description": "A statically-compiled dependency injection system for TypeScript",
   "dependencies": {
-    "hashids": "^1.0.2",
     "lodash": "^4.6.1",
     "mkdirp": "^0.5.1",
     "typescript": "^1.9.0-dev.20160318"
